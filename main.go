@@ -11,23 +11,12 @@ import (
 )
 
 func main() {
-	ClearScreen()
+	clearScreen()
 	fmt.Println("\n\033[33;1mGame Starts </>\033[0m\n")
-	illusion("A_______________")
+	runGame("A_______________")
 }
 
-func game(firstPlace string) bool {
-	for i := 0; i < len(firstPlace); i++ {
-		if firstPlace[i] == 'A' {
-			if i == len(firstPlace)-1 {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func illusion(firstPlace string) {
+func runGame(world string) {
 	if err := keyboard.Open(); err != nil {
 		panic(err)
 	}
@@ -36,13 +25,13 @@ func illusion(firstPlace string) {
 	}()
 
 	for {
-		fmt.Printf("\r%s", firstPlace)
+		fmt.Printf("\r%s", world)
 
-		if game(firstPlace) {
+		if winCheck(world) {
 			break
 		}
 
-		firstPlace = keypress(firstPlace)
+		world = keyPress(world)
 
 		time.Sleep(100 * time.Millisecond)
 	}
@@ -50,29 +39,40 @@ func illusion(firstPlace string) {
 	fmt.Println("\n\033[32mYou won!\033[0m")
 }
 
-func keypress(firstPlace string) string {
+func winCheck(world string) bool {
+	for i := 0; i < len(world); i++ {
+		if world[i] == 'A' {
+			if i == len(world)-1 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func keyPress(world string) string {
 	_, key, err := keyboard.GetKey()
 	if err != nil {
 		panic(err)
 	}
 
 	if key == keyboard.KeyArrowLeft {
-		firstPlace = firstPlace[1:] + "_"
+		world = world[1:] + "_"
 	}
 
 	if key == keyboard.KeyArrowRight {
-		firstPlace = "_" + firstPlace[:len(firstPlace)-1]
+		world = "_" + world[:len(world)-1]
 	}
 
 	if key == keyboard.KeyEsc {
 		fmt.Println("\n\033[31mGame Over\033[0m")
-		return firstPlace
+		return world
 	}
 
-	return firstPlace
+	return world
 }
 
-func ClearScreen() {
+func clearScreen() {
 	if runtime.GOOS == "windows" {
 		cmd := exec.Command("cmd", "/c", "cls")
 		cmd.Stdout = os.Stdout
