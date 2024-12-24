@@ -1,10 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/eiannone/keyboard"
@@ -12,8 +14,7 @@ import (
 
 func main() {
 	clearScreen()
-	fmt.Println("\n\033[33;1mGame Starts </>\033[0m\n")
-	runGame("A_______________")
+	worldBuild()
 }
 
 func runGame(world string) {
@@ -25,29 +26,35 @@ func runGame(world string) {
 	}()
 
 	for {
-		fmt.Printf("\r%s", world)
+		clearScreen()
+		fmt.Println("\n\033[33;1mGame Starts\033[0m")
+		fmt.Printf("\n  %s\n", world)
 
 		if winCheck(world) {
-			break
+			fmt.Println("\n\033[32mYou won!\033[0m")
+			return
 		}
 
 		world = keyPress(world)
-
 		time.Sleep(100 * time.Millisecond)
 	}
+}
 
-	fmt.Println("\n\033[32mYou won!\033[0m")
+func worldBuild() {
+	worldSize := flag.Int("world-size", 16, "Specify the size of the world")
+	flag.Parse()
+
+	if *worldSize <= 1 {
+		fmt.Println("ERR: World size must be greater than 1.")
+		os.Exit(1)
+	}
+
+	world := "A" + strings.Repeat("_", *worldSize-1)
+	runGame(world)
 }
 
 func winCheck(world string) bool {
-	for i := 0; i < len(world); i++ {
-		if world[i] == 'A' {
-			if i == len(world)-1 {
-				return true
-			}
-		}
-	}
-	return false
+	return world[len(world)-1] == 'A'
 }
 
 func keyPress(world string) string {
@@ -56,30 +63,39 @@ func keyPress(world string) string {
 		panic(err)
 	}
 
-	if key == keyboard.KeyArrowLeft {
-		world = world[1:] + "_"
+	index := strings.Index(world, "A")
+	if index == -1 {
+		panic("Player not found")
 	}
 
-	if key == keyboard.KeyArrowRight {
-		world = "_" + world[:len(world)-1]
-	}
+	worldRunes := []rune(world)
 
-	if key == keyboard.KeyEsc {
+	switch key {
+	case keyboard.KeyArrowLeft:
+		if index > 0 {
+			worldRunes[index] = '_'
+			worldRunes[index-1] = 'A'
+		}
+	case keyboard.KeyArrowRight:
+		if index < len(worldRunes)-1 {
+			worldRunes[index] = '_'
+			worldRunes[index+1] = 'A'
+		}
+	case keyboard.KeyEsc:
 		fmt.Println("\n\033[31mGame Over\033[0m")
-		return world
+		os.Exit(0)
 	}
 
-	return world
+	return string(worldRunes)
 }
 
 func clearScreen() {
+	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
-		cmd := exec.Command("cmd", "/c", "cls")
-		cmd.Stdout = os.Stdout
-		cmd.Run()
+		cmd = exec.Command("cmd", "/c", "cls")
 	} else {
-		cmd := exec.Command("clear")
-		cmd.Stdout = os.Stdout
-		cmd.Run()
+		cmd = exec.Command("clear")
 	}
+	cmd.Stdout = os.Stdout
+	_ = cmd.Run()
 }
