@@ -13,3 +13,9 @@ To start the program run:
 ```
 go run main.go
 ```
+
+If you want to change World Size, add flag `world-size` to the start command
+
+```
+go run main.go --world-size=20
+```
