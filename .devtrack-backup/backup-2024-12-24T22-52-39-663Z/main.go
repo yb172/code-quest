@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"math/rand"
 	"os"
 	"os/exec"
 	"runtime"
@@ -13,17 +12,12 @@ import (
 	"github.com/eiannone/keyboard"
 )
 
-type GameWorld struct {
-	layout    string
-	holeIndex int
-}
-
 func main() {
 	clearScreen()
 	worldBuild()
 }
 
-func runGame(world GameWorld) {
+func runGame(world string) {
 	if err := keyboard.Open(); err != nil {
 		panic(err)
 	}
@@ -34,15 +28,14 @@ func runGame(world GameWorld) {
 	for {
 		clearScreen()
 		fmt.Println("\n\033[33;1mGame Starts\033[0m")
-		fmt.Println("Use ← → to move, ↓ to jump in hole, ESC to exit")
-		fmt.Printf("\n  %s\n", world.layout)
+		fmt.Printf("\n  %s\n", world)
 
 		if winCheck(world) {
 			fmt.Println("\n\033[32mYou won!\033[0m")
 			return
 		}
 
-		world.layout = keyPress(world)
+		world = keyPress(world)
 		time.Sleep(100 * time.Millisecond)
 	}
 }
@@ -56,62 +49,37 @@ func worldBuild() {
 		os.Exit(1)
 	}
 
-	rand.Seed(time.Now().UnixNano())
-
-	holeIndex := rand.Intn(*worldSize-2) + 1
-
-	worldRunes := make([]rune, *worldSize)
-	for i := range worldRunes {
-		if i == 0 {
-			worldRunes[i] = 'A'
-		} else if i == holeIndex {
-			worldRunes[i] = ' '
-		} else {
-			worldRunes[i] = '_'
-		}
-	}
-
-	world := GameWorld{
-		layout:    string(worldRunes),
-		holeIndex: holeIndex,
-	}
-
+	world := "A" + strings.Repeat("_", *worldSize-1)
 	runGame(world)
 }
 
-func winCheck(world GameWorld) bool {
-	playerIndex := strings.Index(world.layout, "A")
-	return playerIndex == world.holeIndex
+func winCheck(world string) bool {
+	return world[len(world)-1] == 'A'
 }
 
-func keyPress(world GameWorld) string {
+func keyPress(world string) string {
 	_, key, err := keyboard.GetKey()
 	if err != nil {
 		panic(err)
 	}
 
-	index := strings.Index(world.layout, "A")
+	index := strings.Index(world, "A")
 	if index == -1 {
 		panic("Player not found")
 	}
 
-	worldRunes := []rune(world.layout)
+	worldRunes := []rune(world)
 
 	switch key {
 	case keyboard.KeyArrowLeft:
-		if index > 0 && worldRunes[index-1] != ' ' {
+		if index > 0 {
 			worldRunes[index] = '_'
 			worldRunes[index-1] = 'A'
 		}
 	case keyboard.KeyArrowRight:
-		if index < len(worldRunes)-1 && worldRunes[index+1] != ' ' {
+		if index < len(worldRunes)-1 {
 			worldRunes[index] = '_'
 			worldRunes[index+1] = 'A'
-		}
-	case keyboard.KeyArrowDown:
-		if index == world.holeIndex-1 || index == world.holeIndex+1 {
-			worldRunes[index] = '_'
-			worldRunes[world.holeIndex] = 'A'
 		}
 	case keyboard.KeyEsc:
 		fmt.Println("\n\033[31mGame Over\033[0m")
