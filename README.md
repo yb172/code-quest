@@ -1,16 +1,9 @@
 # code-quest
 
-Hello!
-
-To start the quest create PR to this repository which adds a new line in this `README.md` with the text `Hello world`:
-
-Hello world
-
-Looks good! Now let's make a Go program that will print this line for us every time we run it. Please create a PR with program code, other files if necessary and update instructions on how to run the program below:
-
-To start the program run:
+This is a quick documentation on `How to Start Playing This Game`, sooner I will add a Dockerfile for this thing so it will be easier to deal with in the future, but not it is not hard to do this tasks ( below this paragraph )
 
 ```
+cd cmd
 go run main.go
 ```
 
@@ -18,4 +11,10 @@ If you want to change World Size, add flag `world-size` to the start command
 
 ```
 go run main.go --world-size=20
+```
+
+And if you want to change Depth, add flag `depth` to the start command
+
+```
+go run main.go --depth=10
 ```
